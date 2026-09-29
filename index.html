@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>LMS Field Visit Dashboard | VIVA College</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-hover: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --orange: #fb923c;
+      --pink: #f472b6;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    header {
+      text-align: center;
+      padding: 24px 16px 16px;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-size: clamp(1.4rem, 4vw, 1.9rem);
+      font-weight: 700;
+      margin-bottom: 6px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(56,189,248,0.15);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .kpi:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .kpi .value {
+      font-size: clamp(1.5rem, 5vw, 1.9rem);
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .kpi .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    /* Section */
+    .section {
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    /* Chart cards */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      position: relative;
+    }
+    .chart-card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--muted);
+    }
+    .chart-wrap {
+      position: relative;
+      height: 240px;
+    }
+    .chart-wrap.tall { height: 280px; }
+    /* Insights */
+    .insights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .insight {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .insight .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .insight .icon.blue { background: rgba(56,189,248,0.15); }
+    .insight .icon.green { background: rgba(52,211,153,0.15); }
+    .insight .icon.orange { background: rgba(251,146,60,0.15); }
+    .insight .icon.red { background: rgba(248,113,113,0.15); }
+    .insight .icon.purple { background: rgba(129,140,248,0.15); }
+    .insight h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+    .insight p { font-size: 0.78rem; color: var(--muted); }
+    /* Recommendations */
+    .rec-list {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+    .rec-list li {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .rec-list li::before {
+      content: '→';
+      color: var(--accent);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      border-top: 1px solid var(--border);
+      margin-top: 20px;
+    }
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      .container { padding: 10px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .kpi { padding: 12px 8px; }
+      .chart-grid { grid-template-columns: 1fr; gap: 12px; }
+      .chart-wrap { height: 220px; }
+      .chart-card { padding: 12px; }
+      header { padding: 18px 12px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LMS Usage & Experience Dashboard</h1>
+    <p>Field Visit Project — VIVA College Student Survey</p>
+    <span class="badge">119 Responses · Sep 2026</span>
+  </header>
+
+  <div class="container">
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="value">119</div>
+        <div class="label">Total Responses</div>
+      </div>
+      <div class="kpi">
+        <div class="value">55%</div>
+        <div class="label">Satisfied+</div>
+      </div>
+      <div class="kpi">
+        <div class="value">51</div>
+        <div class="label">UI Complaints</div>
+      </div>
+      <div class="kpi">
+        <div class="value">70%</div>
+        <div class="label">Male Respondents</div>
+      </div>
+      <div class="kpi">
+        <div class="value">78%</div>
+        <div class="label">Science Dept</div>
+      </div>
+      <div class="kpi">
+        <div class="value">45%</div>
+        <div class="label">Mobile Frequent+</div>
+      </div>
+    </div>
+
+    <!-- Demographics -->
+    <div class="section">
+      <div class="section-title">Demographics</div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Gender Distribution</h3>
+          <div class="chart-wrap"><canvas id="genderChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Age Groups</h3>
+          <div class="chart-wrap"><canvas id="ageChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Level of Study</h3>
+          <div class="chart-wrap"><canvas id="levelChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Department</h3>
+          <div class="chart-wrap"><canvas id="deptChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LMS Usage -->
+    <div class="section">
+      <div class="section-title">LMS & Tools Landscape</div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Most Used LMS Platforms</h3>
+          <div class="chart-wrap"><canvas id="lmsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Apps Teachers Use for Notes</h3>
+          <div class="chart-wrap"><canvas id="toolsChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Mobile LMS Access Frequency</h3>
+          <div class="chart-wrap"><canvas id="mobileChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Institution Website Access</h3>
+          <div class="chart-wrap"><canvas id="websiteChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Experience -->
+    <div class="section">
+      <div class="section-title">Student Experience</div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Overall Satisfaction</h3>
+          <div class="chart-wrap"><canvas id="satChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>LMS Reliability</h3>
+          <div class="chart-wrap"><canvas id="relChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Ease of Finding Notes & Assignments</h3>
+          <div class="chart-wrap"><canvas id="easeChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Top Challenges Faced</h3>
+          <div class="chart-wrap tall"><canvas id="challengeChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features & Impact -->
+    <div class="section">
+      <div class="section-title">Features & Perceived Value</div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Most Useful LMS Features</h3>
+          <div class="chart-wrap"><canvas id="featChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Does LMS Help Track Deadlines?</h3>
+          <div class="chart-wrap"><canvas id="trackChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Does LMS Help Communicate with Teachers?</h3>
+          <div class="chart-wrap"><canvas id="commChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Insights -->
+    <div class="section">
+      <div class="section-title">Key Insights</div>
+      <div class="insights">
+        <div class="insight">
+          <div class="icon blue">📱</div>
+          <div>
+            <h4>Mobile Experience is Critical</h4>
+            <p>45% access LMS frequently/always on mobile, yet “Poor mobile app functionality” is the 3rd biggest challenge (28 mentions).</p>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="icon orange">😕</div>
+          <div>
+            <h4>Confusing UI is #1 Pain Point</h4>
+            <p>51 students (43%) reported confusing user interface — the most frequent complaint by a clear margin.</p>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="icon green">✅</div>
+          <div>
+            <h4>Core Features Are Valued</h4>
+            <p>Access to lecture notes (56) and Assignment Submission (50) dominate useful features. Video lectures lag behind.</p>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="icon purple">🔀</div>
+          <div>
+            <h4>Fragmented Tool Ecosystem</h4>
+            <p>Teachers heavily use Telegram (56), Google Classroom (54) & WhatsApp (50) alongside formal LMS platforms.</p>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="icon red">⚠️</div>
+          <div>
+            <h4>Reliability Concerns Exist</h4>
+            <p>Technical glitches rank #2 (44 mentions). Only ~55% are Satisfied or Very Satisfied overall.</p>
+          </div>
+        </div>
+        <div class="insight">
+          <div class="icon blue">🎓</div>
+          <div>
+            <h4>Science-Heavy Sample</h4>
+            <p>78% of respondents are from Science (B.Sc/IT/CS/Biotech). Findings best reflect that cohort.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="section">
+      <div class="section-title">Recommended Improvements (Mobile-First Focus)</div>
+      <ul class="rec-list">
+        <li><strong>Simplify navigation</strong> — Reduce clicks to reach notes, assignments and grades. Students repeatedly asked for a cleaner, more intuitive interface.</li>
+        <li><strong>Prioritize mobile app quality</strong> — Fix crashes, improve performance and make the mobile experience first-class. Nearly half of users rely on mobile frequently.</li>
+        <li><strong>Improve reliability & uptime</strong> — Address technical glitches and system crashes that undermine trust in the platform.</li>
+        <li><strong>Timely updates & notifications</strong> — Students want faster content updates and better alert systems for deadlines and new materials.</li>
+        <li><strong>Integrate popular channels</strong> — Since Telegram, WhatsApp and Google Classroom are already heavily used, explore better bridging or single-source workflows.</li>
+        <li><strong>Enhance core workflows</strong> — Double down on easy assignment submission, quick note access and clear grade tracking — the features students value most.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    Field Visit Project Dashboard · VIVA College LMS Survey · Data collected Sep 10–13, 2026 · 119 valid responses
+  </footer>
+
+  <script>
+    const colors = {
+      blue: '#38bdf8',
+      indigo: '#818cf8',
+      green: '#34d399',
+      yellow: '#fbbf24',
+      orange: '#fb923c',
+      red: '#f87171',
+      pink: '#f472b6',
+      slate: '#94a3b8',
+      cyan: '#22d3ee',
+      purple: '#a78bfa'
+    };
+    const palette = [colors.blue, colors.indigo, colors.green, colors.orange, colors.pink, colors.yellow, colors.cyan, colors.red, colors.purple, colors.slate];
+
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = '#334155';
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.plugins.legend.labels.boxWidth = 12;
+    Chart.defaults.plugins.legend.labels.padding = 12;
+
+    // Gender
+    new Chart(document.getElementById('genderChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Male', 'Female', 'Prefer not to say'],
+        datasets: [{ data: [70, 48, 1], backgroundColor: [colors.blue, colors.pink, colors.slate], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '55%' }
+    });
+
+    // Age
+    new Chart(document.getElementById('ageChart'), {
+      type: 'bar',
+      data: {
+        labels: ['16-18', '18-21', '21-24'],
+        datasets: [{ label: 'Respondents', data: [15, 95, 9], backgroundColor: [colors.indigo, colors.blue, colors.green], borderRadius: 6 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
+    });
+
+    // Level
+    new Chart(document.getElementById('levelChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Undergraduate', 'Postgraduate', 'Doctoral/PhD'],
+        datasets: [{ data: [103, 12, 4], backgroundColor: [colors.blue, colors.indigo, colors.orange], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '55%' }
+    });
+
+    // Department
+    new Chart(document.getElementById('deptChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Science', 'Commerce', 'Arts', 'Postgrad'],
+        datasets: [{ label: 'Respondents', data: [93, 14, 10, 2], backgroundColor: [colors.green, colors.yellow, colors.pink, colors.slate], borderRadius: 6 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#1e293b' } }, y: { grid: { display: false } } } }
+    });
+
+    // LMS
+    new Chart(document.getElementById('lmsChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Google Classroom', 'Blackboard', 'Canvas', 'Moodle'],
+        datasets: [{ label: 'Mentions', data: [57, 50, 41, 8], backgroundColor: [colors.blue, colors.indigo, colors.green, colors.orange], borderRadius: 6 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#1e293b' } }, y: { grid: { display: false } } } }
+    });
+
+    // Tools
+    new Chart(document.getElementById('toolsChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Telegram', 'Google Classroom', 'WhatsApp'],
+        datasets: [{ label: 'Mentions', data: [56, 54, 50], backgroundColor: [colors.cyan, colors.blue, colors.green], borderRadius: 6 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#1e293b' } }, y: { grid: { display: false } } } }
+    });
+
+    // Mobile
+    new Chart(document.getElementById('mobileChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Frequently', 'Occasionally', 'Rarely', 'Always', 'Never'],
+        datasets: [{ data: [35, 34, 26, 19, 4], backgroundColor: [colors.green, colors.blue, colors.yellow, colors.indigo, colors.red], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '50%' }
+    });
+
+    // Website
+    new Chart(document.getElementById('websiteChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['A few times/day', 'Rarely (exams)', 'Once a day', 'Multiple times/day'],
+        datasets: [{ data: [32, 31, 29, 26], backgroundColor: [colors.blue, colors.orange, colors.green, colors.indigo], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '50%' }
+    });
+
+    // Satisfaction
+    new Chart(document.getElementById('satChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Very Satisfied', 'Satisfied', 'Neutral', 'Dissatisfied', 'Very Dissatisfied'],
+        datasets: [{ label: 'Count', data: [25, 41, 35, 8, 2], backgroundColor: [colors.green, colors.blue, colors.yellow, colors.orange, colors.red], borderRadius: 6 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 0, font: { size: 10 } } } } }
+    });
+
+    // Reliability
+    new Chart(document.getElementById('relChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Very Reliable', 'Reliable', 'Okay', 'Not Reliable'],
+        datasets: [{ label: 'Count', data: [28, 42, 22, 4], backgroundColor: [colors.green, colors.blue, colors.yellow, colors.red], borderRadius: 6 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
+    });
+
+    // Ease
+    new Chart(document.getElementById('easeChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Good', 'Not Bad', 'Difficult', 'Bad'],
+        datasets: [{ label: 'Count', data: [38, 32, 24, 16], backgroundColor: [colors.green, colors.blue, colors.orange, colors.red], borderRadius: 6 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
+    });
+
+    // Challenges
+    new Chart(document.getElementById('challengeChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Confusing UI', 'Technical Glitches', 'Poor Mobile App', 'Lack of Timely Updates'],
+        datasets: [{ label: 'Mentions', data: [51, 44, 28, 24], backgroundColor: [colors.red, colors.orange, colors.yellow, colors.pink], borderRadius: 6 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#1e293b' } }, y: { grid: { display: false } } } }
+    });
+
+    // Features
+    new Chart(document.getElementById('featChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Lecture Notes', 'Assignment Submit', 'Grade Tracking', 'Video Lectures'],
+        datasets: [{ label: 'Mentions', data: [56, 50, 34, 14], backgroundColor: [colors.blue, colors.green, colors.indigo, colors.cyan], borderRadius: 6 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#1e293b' } }, y: { grid: { display: false } } } }
+    });
+
+    // Track
+    new Chart(document.getElementById('trackChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Yes', 'Maybe', 'No'],
+        datasets: [{ data: [58, 25, 28], backgroundColor: [colors.green, colors.yellow, colors.red], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '55%' }
+    });
+
+    // Communicate
+    new Chart(document.getElementById('commChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Yes', 'No'],
+        datasets: [{ data: [70, 36], backgroundColor: [colors.green, colors.red], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '55%' }
+    });
+  </script>
+</body>
+</html>
